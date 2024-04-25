@@ -26,21 +26,13 @@ LPDIRECT3DSURFACE9 Application::createSurface(LPDIRECT3DDEVICE9 dev)
 	}
 	IDirect3DSurface9_LockRect(surf, &lockedRect, NULL, D3DLOCK_DISCARD);
 	data = (char*)lockedRect.pBits;
-	drawOnDxBackedBuffer();
+	//drawOnDxBackedBuffer();
+	if (drawingFuntionPtr) {
+		tictac = !tictac;
+		(*drawingFuntionPtr)(data, PIXMAP_WIDTH, PIXMAP_HEIGHT, lockedRect.Pitch, tictac);
+	}
 	IDirect3DSurface9_UnlockRect(surf);
 	return surf;
-}
-
-void Application::drawOnDxBackedBufferSample()
-{
-	for (y = 0; y < PIXMAP_HEIGHT; ++y) {
-		DWORD* row = (DWORD*)data;
-		for (x = 0; x < PIXMAP_WIDTH; ++x) {
-			int r = 0 + std::rand() / ((RAND_MAX + 1u) / 255);
-			*row++ = D3DCOLOR_XRGB(255 - r * y / PIXMAP_HEIGHT, 255 * x / PIXMAP_WIDTH, 255 * y / PIXMAP_HEIGHT);
-		}
-		data += lockedRect.Pitch;
-	}
 }
 
 void Application::renderOnSurface(LPDIRECT3DSURFACE9& surf, LPDIRECT3DDEVICE9& d3dev, D3DPRESENT_PARAMETERS& d3dpp, HWND hWnd, DWORD& endFrame, DWORD& frameTimer)
@@ -59,15 +51,6 @@ void Application::renderOnSurface(LPDIRECT3DSURFACE9& surf, LPDIRECT3DDEVICE9& d
 			surf = NULL;
 		}
 	}
-	//endFrame = (DWORD) GetTickCount64();
-
-	//std::string t = "time:" + std::to_string(endFrame - frameTimer);
-	//Chronometer::write(t);
-
-	//if (endFrame - frameTimer < waitTime) {
-	//	Sleep(16 - (endFrame - frameTimer));	// wait 13 millisec (75 img/sec)
-	//}
-	//frameTimer = endFrame;
 }
 
 void Application::processReleasedKey(WPARAM key)
@@ -112,10 +95,7 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 	}
 
 	// dx9 surface creation
-	LPDIRECT3D9 d9 = Direct3DCreate9(D3D_SDK_VERSION);
-	LPDIRECT3DDEVICE9 d3dev;
-	D3DPRESENT_PARAMETERS d3dpp;
-	LPDIRECT3DSURFACE9 surf;
+	d9 = Direct3DCreate9(D3D_SDK_VERSION);
 	if (waitRefresh) {
 		configParametersWaitRR(&d3dpp, hWnd, PIXMAP_WIDTH, PIXMAP_HEIGHT);
 	}
@@ -129,7 +109,19 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 	
 	surf = createSurface(d3dev);
 
-	DWORD frameTimer = (DWORD) GetTickCount64();
+	return 0;
+}
+
+void Application::waitRR(bool yesOrNo)
+{
+	waitRefresh = yesOrNo;
+}
+
+void Application::messagesLoop(DRAW_CALL_BACK_PTR ptr)
+{
+	this->drawingFuntionPtr = ptr;
+
+	DWORD frameTimer = (DWORD)GetTickCount64();
 	MSG msg;
 	while (TRUE) {
 		DWORD endFrame;
@@ -149,25 +141,12 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 		Chronometer::endLap("renderOnSurface");
 	}
 
+	// freeing
 	if (surf) {
 		IDirect3DSurface9_Release(surf);
 	}
 	IDirect3DDevice9_Release(d3dev);
 	IDirect3D9_Release(d9);
 	endLoop = true;
-	return (int)msg.wParam;
-}
-
-void Application::waitRR(bool yesOrNo)
-{
-	waitRefresh = yesOrNo;
-}
-
-void Application::messagesLoop()
-{
-	MSG msg = { 0 };
-	while (!endLoop && GetMessage(&msg, NULL, 0, 0) > 0) {
-		DispatchMessage(&msg);
-	}
 }
 
