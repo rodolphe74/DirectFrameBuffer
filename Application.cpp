@@ -19,19 +19,23 @@ LRESULT Application::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 }
 
-LPDIRECT3DSURFACE9 Application::createSurface(LPDIRECT3DDEVICE9 dev)
+LPDIRECT3DSURFACE9 Application::drawOnSurface(LPDIRECT3DDEVICE9 dev)
 {
-	if (FAILED(IDirect3DDevice9_CreateOffscreenPlainSurface(dev, PIXMAP_WIDTH, PIXMAP_HEIGHT, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &surf, NULL))) {
-		return NULL;
+	IDirect3DDevice9_Clear(d3dev, 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 170), 1.0f, 0);
+	if (SUCCEEDED(IDirect3DDevice9_GetBackBuffer(d3dev, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer))) {
+		//d3dev->ColorFill(backbuffer, nullptr, D3DCOLOR_XRGB(0, 0, 0));
+		IDirect3DSurface9_LockRect(surf, &lockedRect, NULL, D3DLOCK_DISCARD);
+		data = (char*)lockedRect.pBits;
+		if (drawingFuntionPtr) {
+			tictac = !tictac;
+			(*drawingFuntionPtr)(data, PIXMAP_WIDTH, PIXMAP_HEIGHT, lockedRect.Pitch, tictac);
+		}
+		IDirect3DSurface9_UnlockRect(surf);
+		IDirect3DDevice9_StretchRect(d3dev, surf, NULL, backbuffer, NULL, D3DTEXF_LINEAR);
+		d3dev->Present(nullptr, nullptr, nullptr, nullptr);
 	}
-	IDirect3DSurface9_LockRect(surf, &lockedRect, NULL, D3DLOCK_DISCARD);
-	data = (char*)lockedRect.pBits;
-	//drawOnDxBackedBuffer();
-	if (drawingFuntionPtr) {
-		tictac = !tictac;
-		(*drawingFuntionPtr)(data, PIXMAP_WIDTH, PIXMAP_HEIGHT, lockedRect.Pitch, tictac);
-	}
-	IDirect3DSurface9_UnlockRect(surf);
+
+
 	return surf;
 }
 
@@ -39,17 +43,7 @@ void Application::renderOnSurface(LPDIRECT3DSURFACE9& surf, LPDIRECT3DDEVICE9& d
 {
 	/* Render our scene */
 	if (surf) {
-		LPDIRECT3DSURFACE9 backbuffer;
-		if (SUCCEEDED(IDirect3DDevice9_GetBackBuffer(d3dev, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer))) {
-			IDirect3DDevice9_Clear(d3dev, 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 170), 1.0f, 0);
-			IDirect3DDevice9_StretchRect(d3dev, surf, NULL, backbuffer, NULL, D3DTEXF_LINEAR);
-			IDirect3DSurface9_Release(backbuffer);
-		}
-		surf = createSurface(d3dev);
-		if (IDirect3DDevice9_Present(d3dev, NULL, NULL, NULL, NULL) == D3DERR_DEVICELOST) {
-			IDirect3DSurface9_Release(surf);
-			surf = NULL;
-		}
+		surf = drawOnSurface(d3dev);
 	}
 }
 
@@ -66,7 +60,6 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 	PIXMAP_WIDTH = w;
 	PIXMAP_HEIGHT = h;
 
-	//MSG msg = { 0 };
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = Application::WndProc;
 	wc.hInstance = hInstance;
@@ -77,7 +70,6 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 
 	std::wstring widestr = std::wstring(name.begin(), name.end());
 
-	RECT winRect;
 	winRect.left = 0;
 	winRect.top = 0;
 	winRect.right = PIXMAP_WIDTH;
@@ -106,8 +98,16 @@ int Application::createWindow(HINSTANCE hInstance, std::string name, int w, int 
 		IDirect3D9_Release(d9);
 		return 1;
 	}
-	
-	surf = createSurface(d3dev);
+
+	if (SUCCEEDED(IDirect3DDevice9_GetBackBuffer(d3dev, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer))) {
+		IDirect3DDevice9_Clear(d3dev, 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 170), 1.0f, 0);
+		IDirect3DDevice9_StretchRect(d3dev, surf, NULL, backbuffer, NULL, D3DTEXF_LINEAR);
+		IDirect3DSurface9_Release(backbuffer);
+	}
+
+	if (FAILED(IDirect3DDevice9_CreateOffscreenPlainSurface(d3dev, PIXMAP_WIDTH, PIXMAP_HEIGHT, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &surf, NULL))) {
+		return NULL;
+	}
 
 	return 0;
 }

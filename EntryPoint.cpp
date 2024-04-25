@@ -34,8 +34,6 @@ void drawMoire(char* data, int w, int h, int pitch, bool tictac) {
 	}
 }
 
-
-
 int WINAPI WinMain(HINSTANCE _In_ hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 	Chronometer::toFile = 2;

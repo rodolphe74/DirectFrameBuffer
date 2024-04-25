@@ -21,10 +21,12 @@ private:
 	LPDIRECT3DDEVICE9 d3dev;
 	D3DPRESENT_PARAMETERS d3dpp;
 	LPDIRECT3DSURFACE9 surf;
+	LPDIRECT3DSURFACE9 backbuffer;
+	RECT winRect;
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static void processReleasedKey(WPARAM key);
-	LPDIRECT3DSURFACE9 createSurface(LPDIRECT3DDEVICE9 dev);
+	LPDIRECT3DSURFACE9 drawOnSurface(LPDIRECT3DDEVICE9 dev);
 	void renderOnSurface(LPDIRECT3DSURFACE9& surf, LPDIRECT3DDEVICE9& d3dev, D3DPRESENT_PARAMETERS& d3dpp, HWND hWnd, DWORD& endFrame, DWORD& frameTimer);
 	DRAW_CALL_BACK_PTR drawingFuntionPtr = 0;
 	bool tictac = false;
