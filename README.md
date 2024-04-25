@@ -35,7 +35,7 @@ int WINAPI WinMain(HINSTANCE _In_ hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Application a;
 	a.waitRR(false);
 	a.createWindow(hInstance, "Minimal DX window", 640, 480);
-	a.messagesLoop(drawInterferences);
+	a.messagesLoop(drawMoire);
 	Chronometer::meanLap("Mean");
 	return 0;
 }
