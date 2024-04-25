@@ -1,5 +1,5 @@
 # DirectFrameBuffer
-Draw directly in DirectX9 frame buffer. 
+Draw directly in DirectX9 frame buffer.__
 DirectX9 plumbing is encapsulated in a ```Application``` class.
 
 ```C++
