@@ -15,20 +15,21 @@ void drawInterferences(char* data, int w, int h, int pitch, bool tictac) {
 }
 
 void drawMoire(char* data, int w, int h, int pitch, bool tictac) {
+	bool black = true;
+	//tictac = false;
 	for (int y = 0; y < h; ++y) {
 		DWORD* row = (DWORD*)data;
 		for (int x = 0; x < w; ++x) {
-			if (y % 3)
+			if (!black) {
 				*row++ = tictac ? D3DCOLOR_XRGB(95, 74, 124) : D3DCOLOR_XRGB(0, 255, 0);
-			else{
-				*row++ = tictac ? D3DCOLOR_XRGB(0, 255, 0) : D3DCOLOR_XRGB(95, 74, 124);
 			}
-			if (x % 3)
-				*row++ = tictac ? D3DCOLOR_XRGB(95, 74, 124) : D3DCOLOR_XRGB(0, 255, 0);
 			else {
 				*row++ = tictac ? D3DCOLOR_XRGB(0, 255, 0) : D3DCOLOR_XRGB(95, 74, 124);
 			}
+			black = !black;
+
 		}
+		black = !black;
 		data += pitch;
 	}
 }
@@ -41,7 +42,7 @@ int WINAPI WinMain(HINSTANCE _In_ hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Application a;
 	a.waitRR(false);
 	a.createWindow(hInstance, "Minimal DX window", 640, 480);
-	a.messagesLoop(drawInterferences);
+	a.messagesLoop(drawMoire);
 	Chronometer::meanLap("Mean");
 	return 0;
 }
